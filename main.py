@@ -20,7 +20,6 @@ def calc_assignment_workload_distribution(assignment: Assignment) -> Dict:
     distribution = {}
     date = assignment.basic_info.dates.doable_date
     for work in workload:
-        # distribution[date.strftime("%Y-%m-%d")] = work
         distribution[date] = work
         date += datetime.timedelta(days=1)
     return distribution
@@ -38,35 +37,42 @@ def generate_assignment_todos(assignments: List[Assignment]) -> List[TodoAssignm
             assignment_name = assignment.basic_info.course_id + ' ' + \
                 assignment.basic_info.name + '(' + str(load) + ')'
             todo = TodoAssignment(assignment_name, date, assignment.basic_info.ref_url, assignment.basic_info.id)
-            
-            # record = {"fields": {
-            #     "Name": assignment_name,
-            #     "Date": date,
-            #     "Ref URL": assignment.basic_info.ref_url
-            # },
-            #     "typecast": True}
             todos.append(todo)
-    # json_formatted_str = json.dumps(records, indent=2)
-    # print(json_formatted_str)
-    return todos
+    return todos 
+
+def update_related_assignment(assignment: Assignment):
+    # updates Scheduled? to true
+    pass
 
 
-def post_new_assignment_todo():
+
+def post_new_assignment_todos():
     assignments = Metastore().get_not_scheduled_assignments()
-    todos = generate_assignment_todos(assignments)
 
-    for todo in todos:
-        todo_record = todo.to_post_record()
-        response = requests.post(gv.TODO_URL, json=todo_record, headers=gv.HEADERS)
-        if(response.status_code != 200):
-            print(response.json())
+    for assignment in assignments:
+        todos = generate_assignment_todos(assignments)
+
+        for todo in todos:
+            todo_record = todo.to_post_record()
+            response = requests.post(gv.TODO_URL, json=todo_record, headers=gv.HEADERS)
+
+            # TODO: Throw error
+            if(response.status_code != 200):
+                print(response.json())
+                return None
+        update_related_assignment(assignment)
+
+        
+        
+        
+
 
 
 def main():
     gv.init()
     # assignments = Metastore().get_not_scheduled_assignments()
     # todo_records = generate_assignment_todo_rec(assignments)
-    post_new_assignment_todo()
+    post_new_assignment_todos()
 
 
         # update field Scheduled? to true
@@ -75,6 +81,9 @@ def main():
 
 
     # Metastore().delete_all_todos()
+
+    # json_formatted_str = json.dumps(records, indent=2)
+    # print(json_formatted_str)
 
 
 main()
