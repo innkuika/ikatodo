@@ -6,14 +6,14 @@ class Dates(object):
         self.available_date = available_date
         self.doable_date = doable_date
         self.due_date = due_date
-        self.office_hour_date = office_hour_date  
+        self.office_hour_date = office_hour_date,
 
     def to_json(self) -> Dict:
         return{
             "available_date": self.available_date,
             "doable_date": self.doable_date,
             "due_date": self.due_date,
-            "office_hour_date": self.office_hour_date
+            "office_hour_date": self.office_hour_date,
         }   
 
 class BasicInfo(object):

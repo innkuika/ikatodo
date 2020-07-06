@@ -2,16 +2,15 @@ import requests
 import json
 from typing import List
 from work_models import Assignment, Dates, BasicInfo
+from todo_models import TodoAssignment
 import datetime
-WORK_URL = 'https://api.airtable.com/v0/app9aW8jJyqkeNcxP/Assignments'
-TODO_URL = 'https://api.airtable.com/v0/app9aW8jJyqkeNcxP/Todos'
-HEADERS = {'Authorization': "Bearer keyx4zG23QYBXiRXN"}
+import global_var as gv
 
 
 class Metastore(object):
     def __init__(self):
-        self.work_records = requests.get(WORK_URL, headers=HEADERS).json()['records']
-        self.todo_records = requests.get(TODO_URL, headers=HEADERS).json()['records']
+        self.work_records = requests.get(gv.WORK_URL, headers=gv.HEADERS).json()['records']
+        self.todo_records = requests.get(gv.TODO_URL, headers=gv.HEADERS).json()['records']
 
     def get_all_assignments(self) -> List[Assignment]:
         assignments = []
@@ -31,6 +30,17 @@ class Metastore(object):
                     True if record['fields']['Scheduled?']== 'true' else False)
                 assignments.append(assignment)
         return assignments
+    
+    # def get_all_todos(self) -> List[TodoAssignment]:
+    #     todos = []
+    #     for record in self.todo_records:
+    #         todo = TodoAssignment(record['fields']['Name'],
+    #        datetime.datetime.strptime(record['fields']['Date'], '%Y-%m-%d'),
+    #         record['fields']['Ref URL'] if ('Ref URL' in record['fields']) else '',
+    #         record['fields']['id'],
+
+
+            # )
 
     def get_not_scheduled_assignments(self) -> List[Assignment]:
         assignments = []
@@ -42,7 +52,7 @@ class Metastore(object):
     def delete_all_todos(self):
         for record in self.todo_records:
             id = record["id"]
-            response = requests.delete(f"{TODO_URL}/{id}",  headers=HEADERS)
+            response = requests.delete(f"{gv.TODO_URL}/{id}",  headers=gv.HEADERS)
             if(response.status_code != 200):
                 print(response.json())
 
