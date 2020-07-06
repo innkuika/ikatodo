@@ -5,4 +5,5 @@ def init():
 
     WORK_URL = 'https://api.airtable.com/v0/app9aW8jJyqkeNcxP/Assignments'
     TODO_URL = 'https://api.airtable.com/v0/app9aW8jJyqkeNcxP/Todos'
-    HEADERS = {'Authorization': "Bearer keyx4zG23QYBXiRXN"}
+    HEADERS = {'Authorization': "Bearer keyx4zG23QYBXiRXN",
+               'Content-Type': 'application/json'}

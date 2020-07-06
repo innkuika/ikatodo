@@ -47,15 +47,15 @@ class Assignment(object):
 
     def to_update_record(self):
         return   {
-            "id": self.basic_info.id,
+           
             "fields": {
                 "Assignment Name": self.basic_info.course_id + " " + self.basic_info.name,
                 "Number of Segments": self.segment_number,
                 "Available Date": self.basic_info.dates.available_date.strftime("%Y-%m-%d"),
                 "Doable Date":  self.basic_info.dates.doable_date.strftime("%Y-%m-%d"),
-                "Office Hour Date":  self.basic_info.dates.office_hour_date.strftime("%Y-%m-%d"),
+                # TODO: Check office hour date
+                "Office Hour Date":  self.basic_info.dates.doable_date.strftime("%Y-%m-%d"),
                 "Due Date":  self.basic_info.dates.due_date.strftime("%Y-%m-%d"),
                 "Type": "Assignment",
-                "Scheduled?": self.scheduled
-            },
-                "typecast": True}
+                "Scheduled?": "true" if self.scheduled else "false"
+            }}
