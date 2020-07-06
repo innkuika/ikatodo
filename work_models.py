@@ -6,7 +6,7 @@ class Dates(object):
         self.available_date = available_date
         self.doable_date = doable_date
         self.due_date = due_date
-        self.office_hour_date = office_hour_date,
+        self.office_hour_date = office_hour_date
 
     def to_json(self) -> Dict:
         return{
@@ -53,8 +53,7 @@ class Assignment(object):
                 "Number of Segments": self.segment_number,
                 "Available Date": self.basic_info.dates.available_date.strftime("%Y-%m-%d"),
                 "Doable Date":  self.basic_info.dates.doable_date.strftime("%Y-%m-%d"),
-                # TODO: Check office hour date
-                "Office Hour Date":  self.basic_info.dates.doable_date.strftime("%Y-%m-%d"),
+                "Office Hour Date":  self.basic_info.dates.office_hour_date.strftime("%Y-%m-%d"),
                 "Due Date":  self.basic_info.dates.due_date.strftime("%Y-%m-%d"),
                 "Type": "Assignment",
                 "Scheduled?": "true" if self.scheduled else "false"
