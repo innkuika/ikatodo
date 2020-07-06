@@ -1,5 +1,9 @@
+# IKA TODO
+
 ## Requirements
-	-  'Python 3.7'
+  - python 3.7
 
 ## Run
-	'python3 main.py'
+```bash
+python3 main.py
+```
