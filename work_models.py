@@ -33,12 +33,14 @@ class BasicInfo(object):
         }
 
 class Assignment(object):
-    def __init__(self, basic_info: BasicInfo, segment_number: int):
+    def __init__(self, basic_info: BasicInfo, segment_number: int, scheduled: bool):
         self.basic_info = basic_info
         self.segment_number = segment_number
+        self.scheduled = scheduled
 
     def to_json(self) -> Dict:
         return{
             "basic_info": self.basic_info.to_json(),
-            "segment_number": self.segment_number
+            "segment_number": self.segment_number,
+            "scheduled": self.scheduled
         }
