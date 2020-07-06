@@ -1,7 +1,7 @@
 from metastore import Metastore
 from typing import Dict, List
 from work_models import Assignment
-from todo_models import TodoAssignment
+from todo_models import TodoAssignment, DDLReminder
 import datetime
 import json
 import requests
@@ -40,6 +40,14 @@ def generate_assignment_todos(assignment: Assignment) -> List[TodoAssignment]:
     return todos
 
 
+def generate_ddl_reminder(assignment: Assignment) -> DDLReminder:
+    assignment_info = assignment.basic_info
+    assignment_name = assignment_info.course_id + ' ' + assignment.basic_info.name
+    reminder = DDLReminder(assignment_name, assignment_info.dates.due_date,
+                           assignment_info.ref_url, assignment_info.id)
+    return reminder
+
+
 def update_related_assignment(assignment: Assignment):
     # updates Scheduled? to true
     assignment.scheduled = True
@@ -47,6 +55,8 @@ def update_related_assignment(assignment: Assignment):
     record = assignment.to_update_record()
     response = requests.patch(
         f'{gv.WORK_URL}/{assignment_id}', json=record, headers=gv.HEADERS)
+
+    # TODO: Throw error
     if(response.status_code != 200):
         print(response.status_code)
         print(response.json())
@@ -55,7 +65,6 @@ def update_related_assignment(assignment: Assignment):
 
 def post_new_assignment_todos():
     assignments = Metastore().get_not_scheduled_assignments()
-
     for assignment in assignments:
         todos = generate_assignment_todos(assignment)
         for todo in todos:
@@ -67,15 +76,22 @@ def post_new_assignment_todos():
             if(response.status_code != 200):
                 print(response.json())
                 return None
+        
+        # generate and post DDL reminder for each assignment
+        reminder_record = generate_ddl_reminder(assignment).to_post_record()
+        response = requests.post(
+                gv.TODO_URL, json=reminder_record, headers=gv.HEADERS)
+        if(response.status_code != 200):
+                print(response.json())
+                return None
         update_related_assignment(assignment)
 
 
 def main():
     gv.init()
-    post_new_assignment_todos()
+    # post_new_assignment_todos()
 
-    # Metastore().delete_all_todos()
-
+    Metastore().delete_all_todos()
 
     # json_formatted_str = json.dumps(records, indent=2)
     # print(json_formatted_str)
