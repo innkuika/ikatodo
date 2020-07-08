@@ -1,7 +1,7 @@
 from typing import Dict
 
 class OfficeHour(object):
-    def __init__(self, course_id: str, host: str, role: str, location: str, day: str, time_begin: int, duration: int):
+    def __init__(self, course_id: str, host: str, role: str, location: str, day: int, time_begin: int, duration: int):
         self.course_id = course_id
         self.host = host
         self.role = role
