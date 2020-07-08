@@ -6,7 +6,7 @@ import datetime
 
 
 class Metacache(object):
-    def __init___(self, metastore: Metastore):
+    def __init__(self, metastore: Metastore):
         self.metastore = metastore
 
     def get_assignment_id(self) -> str:

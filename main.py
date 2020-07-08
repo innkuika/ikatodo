@@ -5,6 +5,7 @@ from todo_models import TodoAssignment, DDLReminder, OfficeHourReminder
 from officehour_models import OfficeHour
 from metacache import Metacache
 import datetime
+from time import strftime, gmtime
 import json
 import requests
 import global_var as gv
@@ -65,8 +66,8 @@ def update_related_assignment(assignment: Assignment):
         return None
 
 
-def post_new_assignment_todos():
-    assignments = Metastore().get_not_scheduled_assignments()
+def post_new_assignment_todos(metacache: Metacache):
+    assignments = metacache.metastore.get_not_scheduled_assignments()
     for assignment in assignments:
         todos = generate_assignment_todos(assignment)
         for todo in todos:
@@ -88,26 +89,27 @@ def post_new_assignment_todos():
             return None
         update_related_assignment(assignment)
 
-# TODO
-def generate_office_hour_reminder_description(office_hour: OfficeHour) -> str:
-    description = ''
+
+def generate_office_hour_reminder_description(office_hour: OfficeHour, assignment: Assignment) -> str:
+    host = office_hour.host
+    location = office_hour.location
+    time_begin = strftime("%H:%M", gmtime(office_hour.time_begin))
+    time_end = strftime("%H:%M", gmtime(office_hour.time_end))
+    current_assignment_name = assignment.basic_info.name
+
+    description = f"Meet {host} at {location} form {time_begin} to {time_end}. \n" \
+                  f"Current assignment: {current_assignment_name}"
     return description
 
 
-def generate_office_hour_reminder(assignment: Assignment) -> OfficeHourReminder:
-    # generates office hour reminder object and reminder note
+def generate_office_hour_reminder(metacache: Metacache, assignment: Assignment) -> OfficeHourReminder:
     assignment_info = assignment.basic_info
     assignment_name = assignment_info.course_id + ' ' + assignment.basic_info.name
-
-    # TODO: make main into object and fix this(
-    metastore = Metastore()
-    metacache = Metacache()
-    metacache.metastore = metastore
-
-
     office_hour, date = metacache.get_next_office_hour(assignment_info.course_id)
-    description = generate_office_hour_reminder_description(office_hour)
-    office_hour_reminder = OfficeHourReminder(assignment_name, date, assignment_info.ref_url, assignment_info.id, description)
+    description = generate_office_hour_reminder_description(office_hour, assignment)
+
+    office_hour_reminder = OfficeHourReminder(assignment_name, date, assignment_info.ref_url, assignment_info.id,
+                                              description)
     return office_hour_reminder
 
 
@@ -130,11 +132,11 @@ def update_related_assignment2(assignment: Assignment):
         return None
 
 
-def post_new_office_hour_reminders():
-    assignments = Metastore().get_all_assignments()
+def post_new_office_hour_reminders(metacache: Metacache):
+    assignments = metacache.metastore.get_all_assignments()
     for assignment in assignments:
         if assignment.office_hour:
-            reminder_record = generate_office_hour_reminder(assignment).to_post_record()
+            reminder_record = generate_office_hour_reminder(metacache, assignment).to_post_record()
             response = requests.post(
                 gv.TODO_URL, json=reminder_record, headers=gv.HEADERS)
 
@@ -148,10 +150,12 @@ def post_new_office_hour_reminders():
 
 def main():
     gv.init()
-    post_new_office_hour_reminders()
+    metacache = Metacache(Metastore())
 
-    # post_new_assignment_todos()
-    # Metastore().delete_all_todos()
+    post_new_assignment_todos(metacache)
+    post_new_office_hour_reminders(metacache)
+
+    metacache.metastore.delete_all_todos()
 
     # json_formatted_str = json.dumps(record, indent=2)
     # print(json_formatted_str)

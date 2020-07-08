@@ -79,7 +79,7 @@ class Metastore(object):
                                      record['fields']["Location"],
                                      switcher[weekday],
                                      int(record['fields']["Time Begin"]),
-                                     int(record['fields']["Duration"]))
+                                     int(record['fields']["Time End"]))
             office_hours.append(office_hour)
         return office_hours
 
