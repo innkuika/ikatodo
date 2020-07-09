@@ -81,7 +81,7 @@ class TodoAssignment(object):
         }
     
     def to_post_record(self):
-        return   {"fields": {
+        return{"fields": {
                 "Name": self.name,
                 "Date": self.date.strftime("%Y-%m-%d"),
                 "Ref URL": self.ref_url,
