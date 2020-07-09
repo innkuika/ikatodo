@@ -57,11 +57,8 @@ def update_related_assignment(assignment: Assignment):
     response = requests.patch(
         f'{gv.WORK_URL}/{assignment_id}', json=record, headers=gv.HEADERS)
 
-    # TODO: Throw error
     if response.status_code != 200:
-        print(response.status_code)
-        print(response.json())
-        return None
+        raise Exception('Failed to update related assignment.\n {}'.format(response.json()))
 
 
 def post_new_assignment_todos(metacache: Metacache):
@@ -73,18 +70,16 @@ def post_new_assignment_todos(metacache: Metacache):
             response = requests.post(
                 gv.TODO_URL, json=todo_record, headers=gv.HEADERS)
 
-            # TODO: Throw error
             if response.status_code != 200:
-                print(response.json())
-                return None
+                raise Exception('Failed to post assignment todo. {}'.format(response.json()))
 
         # generate and post DDL reminder for each assignment
         reminder_record = generate_ddl_reminder(assignment).to_post_record()
         response = requests.post(
             gv.TODO_URL, json=reminder_record, headers=gv.HEADERS)
         if response.status_code != 200:
-            print(response.json())
-            return None
+            raise Exception('Failed to post DDL reminder. {}'.format(response.json()))
+
         assignment.scheduled = True
         update_related_assignment(assignment)
 
@@ -117,13 +112,12 @@ def post_new_office_hour_reminders(metacache: Metacache):
     for assignment in assignments:
         if assignment.office_hour:
             reminder_record = generate_office_hour_reminder(metacache, assignment).to_post_record()
+
             response = requests.post(
                 gv.TODO_URL, json=reminder_record, headers=gv.HEADERS)
 
-            # TODO: Throw error
             if response.status_code != 200:
-                print(response.json())
-                return None
+                raise Exception('Failed to post office hour reminder. {}'.format(response.json()))
 
             assignment.office_hour = False
             assignment.status = "Waiting for Help"
