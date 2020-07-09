@@ -52,8 +52,6 @@ def generate_ddl_reminder(assignment: Assignment) -> DDLReminder:
 
 
 def update_related_assignment(assignment: Assignment):
-    # updates Scheduled? to true
-    assignment.scheduled = True
     assignment_id = assignment.basic_info.id
     record = assignment.to_update_record()
     response = requests.patch(
@@ -87,6 +85,7 @@ def post_new_assignment_todos(metacache: Metacache):
         if response.status_code != 200:
             print(response.json())
             return None
+        assignment.scheduled = True
         update_related_assignment(assignment)
 
 
@@ -113,25 +112,6 @@ def generate_office_hour_reminder(metacache: Metacache, assignment: Assignment) 
     return office_hour_reminder
 
 
-def update_related_assignment2(assignment: Assignment):
-    # updates OfficeHour? to true
-    # update status to waiting for help if not already
-    assignment.office_hour = False
-    assignment.status = "Waiting for Help"
-
-    # TODO: merge repetitive code below
-    assignment_id = assignment.basic_info.id
-    record = assignment.to_update_record()
-    response = requests.patch(
-        f'{gv.WORK_URL}/{assignment_id}', json=record, headers=gv.HEADERS)
-
-    # TODO: Throw error
-    if (response.status_code != 200):
-        print(response.status_code)
-        print(response.json())
-        return None
-
-
 def post_new_office_hour_reminders(metacache: Metacache):
     assignments = metacache.metastore.get_all_assignments()
     for assignment in assignments:
@@ -145,15 +125,17 @@ def post_new_office_hour_reminders(metacache: Metacache):
                 print(response.json())
                 return None
 
-            update_related_assignment2(assignment)
+            assignment.office_hour = False
+            assignment.status = "Waiting for Help"
+            update_related_assignment(assignment)
 
 
 def main():
-    # gv.init()
-    # metacache = Metacache(AirtableApiClient())
-    #
-    # post_new_assignment_todos(metacache)
-    # post_new_office_hour_reminders(metacache)
+    gv.init()
+    metacache = Metacache(AirtableApiClient())
+
+    post_new_assignment_todos(metacache)
+    post_new_office_hour_reminders(metacache)
 
     # metacache.metastore.delete_all_todos()
 
