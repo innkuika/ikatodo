@@ -1,7 +1,7 @@
 from airtableapiclient import AirtableApiClient
 from typing import Dict, List, Tuple
 from work_models import Assignment
-from todo_models import TodoAssignment, DDLReminder, OfficeHourReminder
+from todo_models import Todo
 from officehour_models import OfficeHour
 from metacache import Metacache
 import datetime
@@ -28,7 +28,7 @@ def calc_assignment_workload_distribution(assignment: Assignment) -> Dict:
     return distribution
 
 
-def generate_assignment_todos(assignment: Assignment) -> List[TodoAssignment]:
+def generate_assignment_todos(assignment: Assignment) -> List[Todo]:
     todos = []
     work_peroid_and_load = calc_assignment_workload_distribution(assignment)
     for date in work_peroid_and_load:
@@ -37,17 +37,19 @@ def generate_assignment_todos(assignment: Assignment) -> List[TodoAssignment]:
             continue
         assignment_name = assignment.basic_info.course_id + ' ' + \
                           assignment.basic_info.name + '(' + str(load) + ')'
-        todo = TodoAssignment(
-            assignment_name, date, assignment.basic_info.ref_url, assignment.basic_info.id)
+        description = ''
+        todo = Todo(
+            assignment_name, date, assignment.basic_info.ref_url, assignment.basic_info.id, description, "Assignment")
         todos.append(todo)
     return todos
 
 
-def generate_ddl_reminder(assignment: Assignment) -> DDLReminder:
+def generate_ddl_reminder(assignment: Assignment) -> Todo:
     assignment_info = assignment.basic_info
     assignment_name = assignment_info.course_id + ' ' + assignment.basic_info.name
-    reminder = DDLReminder(assignment_name, assignment_info.dates.due_date,
-                           assignment_info.ref_url, assignment_info.id)
+    description = ''
+    reminder = Todo(assignment_name, assignment_info.dates.due_date,
+                    assignment_info.ref_url, assignment_info.id, description, "DDL Reminder")
     return reminder
 
 
@@ -96,14 +98,14 @@ def generate_office_hour_reminder_description(office_hour: OfficeHour, assignmen
     return description
 
 
-def generate_office_hour_reminder(metacache: Metacache, assignment: Assignment) -> OfficeHourReminder:
+def generate_office_hour_reminder(metacache: Metacache, assignment: Assignment) -> Todo:
     assignment_info = assignment.basic_info
     assignment_name = assignment_info.course_id + ' ' + assignment.basic_info.name
     office_hour, date = metacache.get_next_office_hour(assignment_info.course_id)
     description = generate_office_hour_reminder_description(office_hour, assignment)
 
-    office_hour_reminder = OfficeHourReminder(assignment_name, date, assignment_info.ref_url, assignment_info.id,
-                                              description)
+    office_hour_reminder = Todo(assignment_name, date, assignment_info.ref_url, assignment_info.id,
+                                description, "Office Hour Reminder")
     return office_hour_reminder
 
 

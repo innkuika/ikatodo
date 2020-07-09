@@ -2,10 +2,11 @@ import requests
 import json
 from typing import List
 from work_models import Assignment, Dates, BasicInfo
-from todo_models import TodoAssignment
+from todo_models import Todo
 from officehour_models import OfficeHour
 import datetime
 import global_var as gv
+
 
 WeekdayMapping = {
                 "Monday": 0,
@@ -58,15 +59,15 @@ class AirtableApiClient(object):
                 assignments.append(assignment)
         return assignments
 
-    def get_all_todos(self) -> List[TodoAssignment]:
+    def get_all_todos(self) -> List[Todo]:
         todos = []
         for record in self.todo_records:
-            todo = TodoAssignment(record['fields']['Name'],
-                                  datetime.datetime.strptime(
+            todo = Todo(record['fields']['Name'],
+                        datetime.datetime.strptime(
                                       record['fields']['Date'], '%Y-%m-%d'),
-                                  record['fields']['Ref URL'] if (
+                        record['fields']['Ref URL'] if (
                                       'Ref URL' in record['fields']) else '',
-                                  record['fields']['Related Work ID'])
+                        record['fields']['Related Work ID'])
             todos.append(todo)
         return todos
 
