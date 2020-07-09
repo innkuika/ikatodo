@@ -1,6 +1,7 @@
 from typing import Dict
 import datetime
 
+
 class Dates(object):
     def __init__(self, available_date: datetime, doable_date: datetime, due_date: datetime, office_hour_date: datetime):
         self.available_date = available_date
@@ -15,6 +16,7 @@ class Dates(object):
             "due_date": self.due_date,
             "office_hour_date": self.office_hour_date,
         }   
+
 
 class BasicInfo(object):
     def __init__(self, course_id: str, name: str, dates: Dates, id: str, ref_url: str):
@@ -32,22 +34,26 @@ class BasicInfo(object):
             "ref_url": self.ref_url
         }
 
+
 class Assignment(object):
-    def __init__(self, basic_info: BasicInfo, segment_number: int, scheduled: bool):
+    def __init__(self, basic_info: BasicInfo, segment_number: int, scheduled: bool, office_hour: bool, status: str):
         self.basic_info = basic_info
         self.segment_number = segment_number
         self.scheduled = scheduled
+        self.status = status
+        self.office_hour = office_hour
 
     def to_json(self) -> Dict:
         return{
             "basic_info": self.basic_info.to_json(),
             "segment_number": self.segment_number,
-            "scheduled": self.scheduled
+            "scheduled": self.scheduled,
+            "status": self.status,
+            "office_hour": self.office_hour
         }
 
     def to_update_record(self):
-        return   {
-           
+        return{
             "fields": {
                 "Assignment Name": self.basic_info.course_id + " " + self.basic_info.name,
                 "Number of Segments": self.segment_number,
@@ -56,5 +62,7 @@ class Assignment(object):
                 "Office Hour Date":  self.basic_info.dates.office_hour_date.strftime("%Y-%m-%d"),
                 "Due Date":  self.basic_info.dates.due_date.strftime("%Y-%m-%d"),
                 "Type": "Assignment",
-                "Scheduled?": "true" if self.scheduled else "false"
+                "Scheduled?": "true" if self.scheduled else "false",
+                "Status": self.status,
+                "Office Hour?": self.office_hour
             }}

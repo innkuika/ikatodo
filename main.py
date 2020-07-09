@@ -1,8 +1,11 @@
-from metastore import Metastore
-from typing import Dict, List
+from airtableapiclient import AirtableApiClient
+from typing import Dict, List, Tuple
 from work_models import Assignment
-from todo_models import TodoAssignment, DDLReminder
+from todo_models import TodoAssignment, DDLReminder, OfficeHourReminder
+from officehour_models import OfficeHour
+from metacache import Metacache
 import datetime
+from time import strftime, gmtime
 import json
 import requests
 import global_var as gv
@@ -33,7 +36,7 @@ def generate_assignment_todos(assignment: Assignment) -> List[TodoAssignment]:
         if load == 0:
             continue
         assignment_name = assignment.basic_info.course_id + ' ' + \
-            assignment.basic_info.name + '(' + str(load) + ')'
+                          assignment.basic_info.name + '(' + str(load) + ')'
         todo = TodoAssignment(
             assignment_name, date, assignment.basic_info.ref_url, assignment.basic_info.id)
         todos.append(todo)
@@ -57,14 +60,14 @@ def update_related_assignment(assignment: Assignment):
         f'{gv.WORK_URL}/{assignment_id}', json=record, headers=gv.HEADERS)
 
     # TODO: Throw error
-    if(response.status_code != 200):
+    if response.status_code != 200:
         print(response.status_code)
         print(response.json())
         return None
 
 
-def post_new_assignment_todos():
-    assignments = Metastore().get_not_scheduled_assignments()
+def post_new_assignment_todos(metacache: Metacache):
+    assignments = metacache.metastore.get_not_scheduled_assignments()
     for assignment in assignments:
         todos = generate_assignment_todos(assignment)
         for todo in todos:
@@ -73,26 +76,88 @@ def post_new_assignment_todos():
                 gv.TODO_URL, json=todo_record, headers=gv.HEADERS)
 
             # TODO: Throw error
-            if(response.status_code != 200):
+            if response.status_code != 200:
                 print(response.json())
                 return None
-        
+
         # generate and post DDL reminder for each assignment
         reminder_record = generate_ddl_reminder(assignment).to_post_record()
         response = requests.post(
-                gv.TODO_URL, json=reminder_record, headers=gv.HEADERS)
-        if(response.status_code != 200):
-                print(response.json())
-                return None
+            gv.TODO_URL, json=reminder_record, headers=gv.HEADERS)
+        if response.status_code != 200:
+            print(response.json())
+            return None
         update_related_assignment(assignment)
 
 
+def generate_office_hour_reminder_description(office_hour: OfficeHour, assignment: Assignment) -> str:
+    host = office_hour.host
+    location = office_hour.location
+    time_begin = strftime("%H:%M", gmtime(office_hour.time_begin))
+    time_end = strftime("%H:%M", gmtime(office_hour.time_end))
+    current_assignment_name = assignment.basic_info.name
+
+    description = f"Meet {host} at {location} form {time_begin} to {time_end}. \n" \
+                  f"Current assignment: {current_assignment_name}"
+    return description
+
+
+def generate_office_hour_reminder(metacache: Metacache, assignment: Assignment) -> OfficeHourReminder:
+    assignment_info = assignment.basic_info
+    assignment_name = assignment_info.course_id + ' ' + assignment.basic_info.name
+    office_hour, date = metacache.get_next_office_hour(assignment_info.course_id)
+    description = generate_office_hour_reminder_description(office_hour, assignment)
+
+    office_hour_reminder = OfficeHourReminder(assignment_name, date, assignment_info.ref_url, assignment_info.id,
+                                              description)
+    return office_hour_reminder
+
+
+def update_related_assignment2(assignment: Assignment):
+    # updates OfficeHour? to true
+    # update status to waiting for help if not already
+    assignment.office_hour = False
+    assignment.status = "Waiting for Help"
+
+    # TODO: merge repetitive code below
+    assignment_id = assignment.basic_info.id
+    record = assignment.to_update_record()
+    response = requests.patch(
+        f'{gv.WORK_URL}/{assignment_id}', json=record, headers=gv.HEADERS)
+
+    # TODO: Throw error
+    if (response.status_code != 200):
+        print(response.status_code)
+        print(response.json())
+        return None
+
+
+def post_new_office_hour_reminders(metacache: Metacache):
+    assignments = metacache.metastore.get_all_assignments()
+    for assignment in assignments:
+        if assignment.office_hour:
+            reminder_record = generate_office_hour_reminder(metacache, assignment).to_post_record()
+            response = requests.post(
+                gv.TODO_URL, json=reminder_record, headers=gv.HEADERS)
+
+            # TODO: Throw error
+            if response.status_code != 200:
+                print(response.json())
+                return None
+
+            update_related_assignment2(assignment)
+
+
 def main():
-    gv.init()
-    # post_new_assignment_todos()
+    # gv.init()
+    # metacache = Metacache(AirtableApiClient())
+    #
+    # post_new_assignment_todos(metacache)
+    # post_new_office_hour_reminders(metacache)
 
-    Metastore().delete_all_todos()
+    # metacache.metastore.delete_all_todos()
 
-    # json_formatted_str = json.dumps(records, indent=2)
+    # json_formatted_str = json.dumps(record, indent=2)
     # print(json_formatted_str)
+
 main()
