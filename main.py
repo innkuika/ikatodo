@@ -149,16 +149,15 @@ def post_new_office_hour_reminders(metacache: Metacache):
 
 
 def main():
-    gv.init()
-    metacache = Metacache(AirtableApiClient())
-
-    post_new_assignment_todos(metacache)
-    post_new_office_hour_reminders(metacache)
+    # gv.init()
+    # metacache = Metacache(AirtableApiClient())
+    #
+    # post_new_assignment_todos(metacache)
+    # post_new_office_hour_reminders(metacache)
 
     # metacache.metastore.delete_all_todos()
 
     # json_formatted_str = json.dumps(record, indent=2)
     # print(json_formatted_str)
-
 
 main()
