@@ -7,8 +7,18 @@ from officehour_models import OfficeHour
 import datetime
 import global_var as gv
 
+WeekdayMapping = {
+                "Monday": 0,
+                "Tuesday": 1,
+                "Wednesday": 2,
+                "Thursday": 3,
+                "Friday": 4,
+                "Saturday": 5,
+                "Sunday": 6
+            }
 
-class Metastore(object):
+
+class AirtableApiClient(object):
     def __init__(self):
         self.work_records = requests.get(
             gv.WORK_URL, headers=gv.HEADERS).json()['records']
@@ -64,20 +74,11 @@ class Metastore(object):
         office_hours = []
         for record in self.office_hour_records:
             weekday = record['fields']["Day of Week"]
-            switcher = {
-                "Monday": 0,
-                "Tuesday": 1,
-                "Wednesday": 2,
-                "Thursday": 3,
-                "Friday": 4,
-                "Saturday": 5,
-                "Sunday": 6
-            }
             office_hour = OfficeHour(record['fields']["Course ID"],
                                      record['fields']["Host"],
                                      record['fields']["Role"],
                                      record['fields']["Location"],
-                                     switcher[weekday],
+                                     WeekdayMapping[weekday],
                                      int(record['fields']["Time Begin"]),
                                      int(record['fields']["Time End"]))
             office_hours.append(office_hour)

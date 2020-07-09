@@ -1,4 +1,4 @@
-from metastore import Metastore
+from airtableapiclient import AirtableApiClient
 from typing import Dict, List, Tuple
 from work_models import Assignment
 from todo_models import TodoAssignment, DDLReminder, OfficeHourReminder
@@ -60,7 +60,7 @@ def update_related_assignment(assignment: Assignment):
         f'{gv.WORK_URL}/{assignment_id}', json=record, headers=gv.HEADERS)
 
     # TODO: Throw error
-    if (response.status_code != 200):
+    if response.status_code != 200:
         print(response.status_code)
         print(response.json())
         return None
@@ -150,12 +150,12 @@ def post_new_office_hour_reminders(metacache: Metacache):
 
 def main():
     gv.init()
-    metacache = Metacache(Metastore())
+    metacache = Metacache(AirtableApiClient())
 
     post_new_assignment_todos(metacache)
     post_new_office_hour_reminders(metacache)
 
-    metacache.metastore.delete_all_todos()
+    # metacache.metastore.delete_all_todos()
 
     # json_formatted_str = json.dumps(record, indent=2)
     # print(json_formatted_str)
