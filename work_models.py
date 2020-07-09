@@ -1,13 +1,14 @@
 from typing import Dict
 import datetime
+from dataclasses import dataclass
 
 
+@dataclass
 class Dates(object):
-    def __init__(self, available_date: datetime, doable_date: datetime, due_date: datetime, office_hour_date: datetime):
-        self.available_date = available_date
-        self.doable_date = doable_date
-        self.due_date = due_date
-        self.office_hour_date = office_hour_date
+    available_date: datetime
+    doable_date: datetime
+    due_date: datetime
+    office_hour_date: datetime
 
     def to_json(self) -> Dict:
         return{
@@ -18,13 +19,13 @@ class Dates(object):
         }   
 
 
+@dataclass
 class BasicInfo(object):
-    def __init__(self, course_id: str, name: str, dates: Dates, id: str, ref_url: str):
-        self.course_id = course_id
-        self.name = name
-        self.dates = dates
-        self.id = id
-        self.ref_url = ref_url
+    course_id: str
+    name: str
+    dates: Dates
+    id: str
+    ref_url: str
 
     def to_json(self) -> Dict:
         return{
@@ -35,13 +36,13 @@ class BasicInfo(object):
         }
 
 
+@dataclass
 class Assignment(object):
-    def __init__(self, basic_info: BasicInfo, segment_number: int, scheduled: bool, office_hour: bool, status: str):
-        self.basic_info = basic_info
-        self.segment_number = segment_number
-        self.scheduled = scheduled
-        self.status = status
-        self.office_hour = office_hour
+    basic_info: BasicInfo
+    segment_number: int
+    scheduled: bool
+    office_hour: bool
+    status: str
 
     def to_json(self) -> Dict:
         return{
