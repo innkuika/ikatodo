@@ -1,11 +1,10 @@
 import requests
-import json
+from global_var import GlobalVar
 from typing import List
 from work_models import Assignment, Dates, BasicInfo
 from todo_models import Todo
 from officehour_models import OfficeHour
 import datetime
-import global_var as gv
 
 
 WeekdayMapping = {
@@ -20,7 +19,8 @@ WeekdayMapping = {
 
 
 class AirtableApiClient(object):
-    def __init__(self):
+    def __init__(self, gv: GlobalVar):
+        self.gv = gv
         self.work_records = requests.get(
             gv.WORK_URL, headers=gv.HEADERS).json()['records']
         self.todo_records = requests.get(
@@ -103,6 +103,6 @@ class AirtableApiClient(object):
         for record in self.todo_records:
             id = record["id"]
             response = requests.delete(
-                f"{gv.TODO_URL}/{id}",  headers=gv.HEADERS)
+                f"{self.gv.TODO_URL}/{id}",  headers=self.gv.HEADERS)
             if(response.status_code != 200):
                 print(response.json())

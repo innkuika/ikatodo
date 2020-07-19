@@ -15,8 +15,11 @@ source ./venv/bin/activate
 pip install -r requirements.txt
 ```
 
+## Prepare environment variables
+* Copy `.example.env` as `.env`
+* Fill `.env`
+
 ## Run
 ```bash
-source ./venv/bin/activate
-python main.py
+./main.sh
 ```

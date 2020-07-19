@@ -1,14 +1,15 @@
+import datetime
+import requests
+from global_var import GlobalVar
 from airtableapiclient import AirtableApiClient
-from typing import Dict, List, Tuple
+from typing import Dict, List
 from work_models import Assignment
 from todo_models import Todo
 from officehour_models import OfficeHour
 from metacache import Metacache
-import datetime
 from time import strftime, gmtime
-import json
-import requests
-import global_var as gv
+
+gv = GlobalVar()
 
 
 def calc_assignment_workload_distribution(assignment: Assignment) -> Dict:
@@ -127,8 +128,7 @@ def post_new_office_hour_reminders(metacache: Metacache):
 
 
 def main():
-    gv.init()
-    metacache = Metacache(AirtableApiClient())
+    metacache = Metacache(AirtableApiClient(gv))
 
     post_new_assignment_todos(metacache)
     post_new_office_hour_reminders(metacache)
@@ -138,4 +138,6 @@ def main():
     # json_formatted_str = json.dumps(record, indent=2)
     # print(json_formatted_str)
 
-main()
+
+if __name__ == '__main__':
+    main()
