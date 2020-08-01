@@ -3,7 +3,23 @@
 ## Requirements
   - python 3.7
 
+## Install virtualenv if you haven't
+```bash
+python3 -m pip install --user virtualenv
+```
+
+## Install dependencies
+```bash
+python3 -m virtualenv venv
+source ./venv/bin/activate
+pip install -r requirements.txt
+```
+
+## Prepare environment variables
+* Copy `.example.env` as `.env`
+* Fill `.env`
+
 ## Run
 ```bash
-python3 main.py
+./main.sh
 ```
