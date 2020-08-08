@@ -1,10 +1,8 @@
 import requests
-from global_var import GlobalVar
-from typing import List
-from work_models import Assignment, Dates, BasicInfo
-from todo_models import Todo
-from officehour_models import OfficeHour
 import datetime
+from typing import List
+from .global_var import GlobalVar
+from .models import OfficeHour, BasicInfo, Todo, Assignment, Dates
 
 
 WeekdayMapping = {
@@ -104,8 +102,8 @@ class AirtableApiClient(object):
 
     def delete_all_todos(self):
         for record in self.todo_records:
-            id = record["id"]
+            _id = record["id"]
             response = requests.delete(
-                f"{self.gv.TODO_URL}/{id}",  headers=self.gv.HEADERS)
-            if(response.status_code != 200):
+                f"{self.gv.TODO_URL}/{_id}",  headers=self.gv.HEADERS)
+            if response.status_code != 200:
                 print(response.json())

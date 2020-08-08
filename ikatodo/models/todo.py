@@ -39,5 +39,3 @@ class Todo(object):
                 "Type": self.type
             },
                 "typecast": True}
-
-
