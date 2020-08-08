@@ -20,12 +20,6 @@ WeekdayMapping = {
 class AirtableApiClient(object):
     def __init__(self, gv: GlobalVar):
         self.gv = gv
-        self.assignment_records = requests.get(
-            gv.ASSIGNMENTS_URL, headers=gv.HEADERS).json()['records']
-        self.todo_records = requests.get(
-            gv.TODO_URL, headers=gv.HEADERS).json()['records']
-        self.office_hour_records = requests.get(
-            gv.OH_URL, headers=gv.HEADERS).json()['records']
 
     @staticmethod
     def _handle_bad_response(response: Response):
@@ -37,7 +31,10 @@ class AirtableApiClient(object):
 
     def get_all_assignments(self) -> List[Assignment]:
         assignments = []
-        for record in self.assignment_records:
+        assignment_records = requests.get(
+            self.gv.ASSIGNMENTS_URL, headers=self.gv.HEADERS
+        ).json()['records']
+        for record in assignment_records:
             if record['fields']['Type'] == 'Assignment':
                 dates = Dates(datetime.datetime.strptime(record['fields']['Available Date'], '%Y-%m-%d'),
                               datetime.datetime.strptime(
@@ -66,16 +63,12 @@ class AirtableApiClient(object):
             requests.patch(f'{self.gv.ASSIGNMENTS_URL}/{assignment_id}', json=record, headers=self.gv.HEADERS)
         )
 
-    def get_assignments_need_oh(self) -> List[Assignment]:
-        assignments = []
-        for assignment in self.get_all_assignments():
-            if assignment.office_hour:
-                assignments.append(assignment)
-        return assignments
-
     def get_all_todos(self) -> List[Todo]:
         todos = []
-        for record in self.todo_records:
+        todo_records = requests.get(
+            self.gv.TODO_URL, headers=self.gv.HEADERS
+        ).json()['records']
+        for record in todo_records:
             todo = Todo(record['fields']['Name'],
                         datetime.datetime.strptime(
                                       record['fields']['Date'], '%Y-%m-%d'),
@@ -98,7 +91,10 @@ class AirtableApiClient(object):
 
     def get_all_office_hours(self) -> List[OfficeHour]:
         office_hours = []
-        for record in self.office_hour_records:
+        office_hour_records = requests.get(
+            self.gv.OH_URL, headers=self.gv.HEADERS
+        ).json()['records']
+        for record in office_hour_records:
             weekday = record['fields']["Day of Week"]
             office_hour = OfficeHour(record['fields']["Course ID"],
                                      record['fields']["Host"],
@@ -109,25 +105,3 @@ class AirtableApiClient(object):
                                      int(record['fields']["Time End"]))
             office_hours.append(office_hour)
         return office_hours
-
-    def get_office_hour_by_course_id(self, course_id: str) -> List[OfficeHour]:
-        office_hours = []
-        for office_hour in self.get_all_office_hours():
-            if course_id == office_hour.course_id:
-                office_hours.append(office_hour)
-        return office_hours
-
-    def get_unscheduled_assignments(self) -> List[Assignment]:
-        assignments = []
-        for assignment in self.get_all_assignments():
-            if not assignment.scheduled:
-                assignments.append(assignment)
-        return assignments
-
-    def delete_all_todos(self):
-        for record in self.todo_records:
-            _id = record["id"]
-            response = requests.delete(
-                f"{self.gv.TODO_URL}/{_id}",  headers=self.gv.HEADERS)
-            if response.status_code != 200:
-                print(response.json())
