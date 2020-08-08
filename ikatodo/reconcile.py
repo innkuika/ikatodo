@@ -10,35 +10,36 @@ from .api_wrapper import ApiWrapper
 gv = GlobalVar()
 
 
-def calc_assignment_workload_distribution(assignment: Assignment) -> Dict:
-    worktime = (assignment.basic_info.dates.due_date -
-                assignment.basic_info.dates.doable_date).days
+def calc_assignment_workload_distribution(assignment: Assignment) -> Dict[datetime, int]:
+    days = (assignment.basic_info.dates.due_date - assignment.basic_info.dates.doable_date).days
 
     # distributes workload evenly
-    num = assignment.segment_number
-    div = worktime
-    workload = [num // div + (1 if x < num % div else 0) for x in range(div)]
+    segments = assignment.segment_number
+    workloads = [segments // days + (1 if x < segments % days else 0) for x in range(days)]
 
     distribution = {}
     date = assignment.basic_info.dates.doable_date
-    for work in workload:
-        distribution[date] = work
+    for workload in workloads:
+        distribution[date] = workload
         date += datetime.timedelta(days=1)
     return distribution
 
 
 def generate_assignment_todos(assignment: Assignment) -> List[Todo]:
     todos = []
-    work_peroid_and_load = calc_assignment_workload_distribution(assignment)
-    for date in work_peroid_and_load:
-        load = work_peroid_and_load[date]
+    work_period_and_load = calc_assignment_workload_distribution(assignment)
+    for date, load in work_period_and_load.items():
         if load == 0:
             continue
-        assignment_name = f"{assignment.basic_info.course_id} {assignment.basic_info.name} ({str(load)})"
-        description = ''
+        todo_name = f"{assignment.basic_info.course_id} {assignment.basic_info.name} ({str(load)})"
         todo = Todo(
-            assignment_name, date, assignment.basic_info.ref_url, assignment.basic_info.id, description, "Assignment",
-            ''
+            name=todo_name,
+            date=date,
+            ref_url=assignment.basic_info.ref_url,
+            related_work_id=assignment.basic_info.id,
+            description="",
+            type="Assignment",
+            id=''
         )
         todos.append(todo)
     return todos
@@ -46,44 +47,34 @@ def generate_assignment_todos(assignment: Assignment) -> List[Todo]:
 
 def generate_ddl_reminder(assignment: Assignment) -> Todo:
     assignment_info = assignment.basic_info
-    assignment_name = assignment_info.course_id + ' ' + assignment.basic_info.name
-    description = ''
-    reminder = Todo(assignment_name, assignment_info.dates.due_date,
-                    assignment_info.ref_url, assignment_info.id, description, "DDL Reminder", '')
+    assignment_name = f"{assignment_info.course_id} {assignment.basic_info.name}"
+    reminder = Todo(
+        name=assignment_name,
+        date=assignment_info.dates.due_date,
+        ref_url=assignment_info.ref_url,
+        related_work_id=assignment_info.id,
+        description="",
+        type="DDL Reminder",
+        id=''
+    )
     return reminder
 
 
-def update_related_assignment(assignment: Assignment):
-    assignment_id = assignment.basic_info.id
-    record = assignment.to_update_record()
-    response = requests.patch(
-        f'{gv.WORK_URL}/{assignment_id}', json=record, headers=gv.HEADERS)
-
-    if response.status_code != 200:
-        raise Exception('Failed to update related assignment.\n {}'.format(response.json()))
-
-
 def post_new_assignment_todos(api_wrapper: ApiWrapper):
-    assignments = api_wrapper.api_client.get_not_scheduled_assignments()
+    assignments = api_wrapper.api_client.get_unscheduled_assignments()
     for assignment in assignments:
+        # generate and post todo for each assignment
         todos = generate_assignment_todos(assignment)
         for todo in todos:
-            todo_record = todo.to_post_record()
-            response = requests.post(
-                gv.TODO_URL, json=todo_record, headers=gv.HEADERS)
-
-            if response.status_code != 200:
-                raise Exception('Failed to post assignment todo. {}'.format(response.json()))
+            api_wrapper.api_client.post_todo(todo)
 
         # generate and post DDL reminder for each assignment
-        reminder_record = generate_ddl_reminder(assignment).to_post_record()
-        response = requests.post(
-            gv.TODO_URL, json=reminder_record, headers=gv.HEADERS)
-        if response.status_code != 200:
-            raise Exception('Failed to post DDL reminder. {}'.format(response.json()))
+        ddl_reminder = generate_ddl_reminder(assignment)
+        api_wrapper.api_client.post_todo(ddl_reminder)
 
+        # mark assignment as scheduled
         assignment.scheduled = True
-        update_related_assignment(assignment)
+        api_wrapper.api_client.update_assignment(assignment)
 
 
 def generate_office_hour_reminder_description(office_hour: OfficeHour, assignment: Assignment) -> str:
@@ -123,7 +114,7 @@ def post_new_office_hour_reminders(api_wrapper: ApiWrapper):
 
             assignment.office_hour = False
             assignment.status = "Waiting for Help"
-            update_related_assignment(assignment)
+            api_wrapper.api_client.update_assignment(assignment)
 
 
 def update_todo(todo: Todo) -> int:

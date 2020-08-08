@@ -9,7 +9,7 @@ def get_env_or_raise(key: str) -> str:
 
 class GlobalVar(object):
     def __init__(self):
-        self.WORK_URL = get_env_or_raise("ASSIGNMENTS_AIRTABLE_API")
+        self.ASSIGNMENTS_URL = get_env_or_raise("ASSIGNMENTS_AIRTABLE_API")
         self.TODO_URL = get_env_or_raise("TODOS_AIRTABLE_API")
         self.OH_URL = get_env_or_raise("OFFICE_HOUR_AIRTABLE_API")
         self.HEADERS = {'Authorization': f"Bearer {get_env_or_raise('AUTH_TOKEN')}",

@@ -1,5 +1,5 @@
-from typing import Dict
 import datetime
+from typing import Dict
 from dataclasses import dataclass
 
 
@@ -14,7 +14,7 @@ class Todo(object):
     id: str
 
     def to_json(self) -> Dict:
-        return{
+        return {
             "Name": self.name,
             "Date": self.date,
             "Ref URL": self.ref_url,
@@ -30,7 +30,8 @@ class Todo(object):
         elif self.type == "Office Hour Reminder":
             reminder = "[OH] "
 
-        return{"fields": {
+        return {
+            "fields": {
                 "Name": reminder + self.name,
                 "Date": self.date.strftime("%Y-%m-%d"),
                 "Description": self.description,
@@ -38,4 +39,5 @@ class Todo(object):
                 "Related Work ID": self.related_work_id,
                 "Type": self.type
             },
-                "typecast": True}
+            "typecast": True
+        }
