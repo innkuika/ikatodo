@@ -40,7 +40,7 @@ def generate_assignment_todos(assignment: Assignment) -> List[Todo]:
                           assignment.basic_info.name + '(' + str(load) + ')'
         description = ''
         todo = Todo(
-            assignment_name, date, assignment.basic_info.ref_url, assignment.basic_info.id, description, "Assignment")
+            assignment_name, date, assignment.basic_info.ref_url, assignment.basic_info.id, description, "Assignment", '')
         todos.append(todo)
     return todos
 
@@ -50,7 +50,7 @@ def generate_ddl_reminder(assignment: Assignment) -> Todo:
     assignment_name = assignment_info.course_id + ' ' + assignment.basic_info.name
     description = ''
     reminder = Todo(assignment_name, assignment_info.dates.due_date,
-                    assignment_info.ref_url, assignment_info.id, description, "DDL Reminder")
+                    assignment_info.ref_url, assignment_info.id, description, "DDL Reminder", '')
     return reminder
 
 
@@ -127,11 +127,30 @@ def post_new_office_hour_reminders(metacache: Metacache):
             update_related_assignment(assignment)
 
 
+def update_todo(todo: Todo) -> int:
+    todo_id = todo.id
+    record = todo.to_post_record()
+    response = requests.patch(
+        f'{gv.TODO_URL}/{todo_id}', json=record, headers=gv.HEADERS)
+
+    return response.status_code
+
+
+def reassign_overdue_assignment_todos(metacache: Metacache):
+    overdue_assignment_todos = metacache.get_overdue_assignment_todos()
+    for todo in overdue_assignment_todos:
+        response = update_todo(todo)
+        if response != 200:
+            raise Exception('Failed to update overdue assignment todos.\n {}'.format(response.json()))
+
+
 def main():
     metacache = Metacache(AirtableApiClient(gv))
 
     post_new_assignment_todos(metacache)
     post_new_office_hour_reminders(metacache)
+
+    reassign_overdue_assignment_todos(metacache)
 
     # metacache.metastore.delete_all_todos()
 

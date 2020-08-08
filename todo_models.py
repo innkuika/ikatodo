@@ -11,6 +11,7 @@ class Todo(object):
     related_work_id: str
     description: str
     type: str
+    id: str
 
     def to_json(self) -> Dict:
         return{
