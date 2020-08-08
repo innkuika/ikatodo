@@ -1,5 +1,4 @@
 import datetime
-import requests
 from typing import Dict, List
 from time import strftime, gmtime
 from .global_var import GlobalVar
@@ -10,7 +9,7 @@ from .api_wrapper import ApiWrapper
 gv = GlobalVar()
 
 
-def calc_assignment_workload_distribution(assignment: Assignment) -> Dict[datetime, int]:
+def calc_assignment_workload_distribution(assignment: Assignment) -> Dict[datetime.date, int]:
     days = (assignment.basic_info.dates.due_date - assignment.basic_info.dates.doable_date).days
 
     # distributes workload evenly
@@ -61,16 +60,16 @@ def generate_ddl_reminder(assignment: Assignment) -> Todo:
 
 
 def post_new_assignment_todos(api_wrapper: ApiWrapper):
-    assignments = api_wrapper.api_client.get_unscheduled_assignments()
+    assignments = api_wrapper.get_unscheduled_assignments()
     for assignment in assignments:
         # generate and post todo for each assignment
         todos = generate_assignment_todos(assignment)
         for todo in todos:
-            api_wrapper.api_client.post_todo(todo)
+            api_wrapper.api_client.create_todo(todo)
 
         # generate and post DDL reminder for each assignment
         ddl_reminder = generate_ddl_reminder(assignment)
-        api_wrapper.api_client.post_todo(ddl_reminder)
+        api_wrapper.api_client.create_todo(ddl_reminder)
 
         # mark assignment as scheduled
         assignment.scheduled = True
@@ -104,39 +103,26 @@ def post_new_office_hour_reminders(api_wrapper: ApiWrapper):
     assignments = api_wrapper.api_client.get_all_assignments()
     for assignment in assignments:
         if assignment.office_hour:
-            reminder_record = generate_office_hour_reminder(api_wrapper, assignment).to_post_record()
+            # generate and post OH reminder
+            reminder = generate_office_hour_reminder(api_wrapper, assignment)
+            api_wrapper.api_client.create_todo(reminder)
 
-            response = requests.post(
-                gv.TODO_URL, json=reminder_record, headers=gv.HEADERS)
-
-            if response.status_code != 200:
-                raise Exception('Failed to post office hour reminder. {}'.format(response.json()))
-
+            # mark assignment as waiting for help
             assignment.office_hour = False
             assignment.status = "Waiting for Help"
             api_wrapper.api_client.update_assignment(assignment)
 
 
-def update_todo(todo: Todo) -> int:
-    todo_id = todo.id
-    record = todo.to_post_record()
-    response = requests.patch(
-        f'{gv.TODO_URL}/{todo_id}', json=record, headers=gv.HEADERS)
-
-    return response.status_code
-
-
 def reassign_overdue_assignment_todos(api_wrapper: ApiWrapper):
     overdue_assignment_todos = api_wrapper.get_overdue_assignment_todos()
     for todo in overdue_assignment_todos:
-        status_code = update_todo(todo)
-        if status_code != 200:
-            raise Exception(f'Failed to update overdue assignment todos.\n {status_code}')
+        api_wrapper.api_client.update_todo(todo)
 
 
-def reconcile():
+def run():
+    print("Started!")
     api_wrapper = ApiWrapper(AirtableApiClient(gv))
     post_new_assignment_todos(api_wrapper)
     post_new_office_hour_reminders(api_wrapper)
     reassign_overdue_assignment_todos(api_wrapper)
-    print("Finished reconciling, yayy!")
+    print("Finished, yayy!")

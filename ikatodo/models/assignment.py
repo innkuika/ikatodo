@@ -1,14 +1,14 @@
 from typing import Dict
-import datetime
+from datetime import date
 from dataclasses import dataclass
 
 
 @dataclass
 class Dates(object):
-    available_date: datetime
-    doable_date: datetime
-    due_date: datetime
-    office_hour_date: datetime
+    available_date: date
+    doable_date: date
+    due_date: date
+    office_hour_date: date
 
     def to_json(self) -> Dict:
         return{

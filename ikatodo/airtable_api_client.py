@@ -22,7 +22,7 @@ class AirtableApiClient(object):
         self.gv = gv
 
     @staticmethod
-    def _handle_bad_response(response: Response):
+    def _raise_on_bad_response(response: Response):
         if response.status_code != 200:
             raise Exception(f'Failed to post to {response.request.url}. '
                             f'Request body {response.request.body}. '
@@ -59,7 +59,7 @@ class AirtableApiClient(object):
     def update_assignment(self, assignment: Assignment):
         assignment_id = assignment.basic_info.id
         record = assignment.to_update_record()
-        self._handle_bad_response(
+        self._raise_on_bad_response(
             requests.patch(f'{self.gv.ASSIGNMENTS_URL}/{assignment_id}', json=record, headers=self.gv.HEADERS)
         )
 
@@ -81,13 +81,20 @@ class AirtableApiClient(object):
             todos.append(todo)
         return todos
 
-    def post_todo(self, todo: Todo):
+    def create_todo(self, todo: Todo):
         todo_record = todo.to_post_record()
-        self._handle_bad_response(requests.post(
+        self._raise_on_bad_response(requests.post(
             self.gv.TODO_URL,
             json=todo_record,
             headers=self.gv.HEADERS
         ))
+
+    def update_todo(self, todo: Todo):
+        todo_id = todo.id
+        record = todo.to_post_record()
+        self._raise_on_bad_response(
+            requests.patch(f'{self.gv.TODO_URL}/{todo_id}', json=record, headers=self.gv.HEADERS)
+        )
 
     def get_all_office_hours(self) -> List[OfficeHour]:
         office_hours = []

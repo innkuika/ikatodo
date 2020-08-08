@@ -1,12 +1,12 @@
-import datetime
 from typing import Dict
 from dataclasses import dataclass
+from datetime import date
 
 
 @dataclass
 class Todo(object):
     name: str
-    date: datetime
+    date: date
     ref_url: str
     related_work_id: str
     description: str
