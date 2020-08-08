@@ -1,12 +1,9 @@
 import datetime
 from typing import Dict, List
 from time import strftime, gmtime
-from .global_var import GlobalVar
 from .airtable_api_client import AirtableApiClient
 from .models import Assignment, Todo, OfficeHour
 from .api_wrapper import ApiWrapper
-
-gv = GlobalVar()
 
 
 def calc_assignment_workload_distribution(assignment: Assignment) -> Dict[datetime.date, int]:
@@ -121,7 +118,7 @@ def reassign_overdue_assignment_todos(api_wrapper: ApiWrapper):
 
 def run():
     print("Started!")
-    api_wrapper = ApiWrapper(AirtableApiClient(gv))
+    api_wrapper = ApiWrapper(AirtableApiClient())
     post_new_assignment_todos(api_wrapper)
     post_new_office_hour_reminders(api_wrapper)
     reassign_overdue_assignment_todos(api_wrapper)
