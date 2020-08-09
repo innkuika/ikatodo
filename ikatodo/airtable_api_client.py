@@ -23,6 +23,10 @@ WeekdayMapping = {
 
 
 class AirtableApiClient(object):
+    """
+    Object to directly make Airtable API calls without additional computations
+    For additional computations please use ApiWrapper
+    """
     def __init__(self):
         self.ASSIGNMENTS_URL = get_env_or_raise("ASSIGNMENTS_AIRTABLE_API")
         self.TODO_URL = get_env_or_raise("TODOS_AIRTABLE_API")

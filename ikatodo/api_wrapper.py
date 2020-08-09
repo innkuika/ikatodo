@@ -5,6 +5,9 @@ from typing import Tuple, List
 
 
 class ApiWrapper(object):
+    """
+    Object to perform additional computations based on Airtable API call results
+    """
     def __init__(self, api_client: AirtableApiClient):
         self.api_client = api_client
 
