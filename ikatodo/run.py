@@ -119,7 +119,8 @@ def reassign_overdue_assignment_todos(api_wrapper: ApiWrapper):
 def run():
     print("Started!")
     api_wrapper = ApiWrapper(AirtableApiClient())
-    post_new_assignment_todos(api_wrapper)
-    post_new_office_hour_reminders(api_wrapper)
-    reassign_overdue_assignment_todos(api_wrapper)
+    # post_new_assignment_todos(api_wrapper)
+    # post_new_office_hour_reminders(api_wrapper)
+    # reassign_overdue_assignment_todos(api_wrapper)
+    api_wrapper.api_client.delete_all_todo()
     print("Finished, yayy!")
