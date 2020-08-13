@@ -35,7 +35,8 @@ def generate_assignment_todos(assignment: Assignment) -> List[Todo]:
             related_work_id=assignment.basic_info.id,
             description="",
             type="Assignment",
-            id=''
+            id='None',
+            status='NA'
         )
         todos.append(todo)
     return todos
@@ -51,7 +52,8 @@ def generate_ddl_reminder(assignment: Assignment) -> Todo:
         related_work_id=assignment_info.id,
         description="",
         type="DDL Reminder",
-        id=''
+        id='',
+        status="NA"
     )
     return reminder
 
@@ -91,8 +93,14 @@ def generate_office_hour_reminder(api_wrapper: ApiWrapper, assignment: Assignmen
     office_hour, date = api_wrapper.get_next_office_hour(assignment_info.course_id)
     description = generate_office_hour_reminder_description(office_hour, assignment)
 
-    office_hour_reminder = Todo(assignment_name, date, assignment_info.ref_url, assignment_info.id,
-                                description, "Office Hour Reminder", "")  # todo: ID?
+    office_hour_reminder = Todo(name=assignment_name,
+                                date=date,
+                                ref_url=assignment_info.ref_url,
+                                related_work_id=assignment_info.id,
+                                description=description,
+                                type="Office Hour Reminder",
+                                status='NA',
+                                id='')
     return office_hour_reminder
 
 
@@ -122,4 +130,5 @@ def run():
     post_new_assignment_todos(api_wrapper)
     post_new_office_hour_reminders(api_wrapper)
     reassign_overdue_assignment_todos(api_wrapper)
+    api_wrapper.api_client.delete_all_todo()
     print("Finished, yayy!")

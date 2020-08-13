@@ -1,4 +1,3 @@
-from typing import Dict
 from dataclasses import dataclass
 from datetime import date
 
@@ -12,16 +11,7 @@ class Todo(object):
     description: str
     type: str
     id: str
-
-    def to_json(self) -> Dict:
-        return {
-            "Name": self.name,
-            "Date": self.date,
-            "Ref URL": self.ref_url,
-            "related assignment id": self.related_work_id,
-            "Type": self.type,
-            "Description": self.description
-        }
+    status: str
 
     def to_post_record(self):
         reminder = ""
@@ -33,6 +23,7 @@ class Todo(object):
         return {
             "fields": {
                 "Name": reminder + self.name,
+                "Status": self.status,
                 "Date": self.date.strftime("%Y-%m-%d"),
                 "Description": self.description,
                 "Ref URL": self.ref_url,

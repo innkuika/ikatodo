@@ -89,7 +89,8 @@ class AirtableApiClient(object):
                         record['fields']['Related Work ID'],
                         record['fields']['Description'] if 'Description' in record['fields'] else '',
                         record['fields']['Type'],
-                        record['id'])
+                        record['id'],
+                        record['fields']['Status'] if ('Status' in record['fields']) else 'NA')
             todos.append(todo)
         return todos
 
@@ -116,3 +117,9 @@ class AirtableApiClient(object):
                                      int(record['fields']["Time End"]))
             office_hours.append(office_hour)
         return office_hours
+
+    def delete_all_todo(self):
+        todo_records = self.session.get(self.TODO_URL).json()['records']
+        for record in todo_records:
+            _id = record["id"]
+            self._raise_on_bad_response(self.session.delete(f"{self.TODO_URL}/{_id}", json=record))
