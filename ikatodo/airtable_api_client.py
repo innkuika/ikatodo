@@ -89,7 +89,8 @@ class AirtableApiClient(object):
                         record['fields']['Related Work ID'],
                         record['fields']['Description'] if 'Description' in record['fields'] else '',
                         record['fields']['Type'],
-                        record['id'])
+                        record['id'],
+                        record['fields']['Status'] if ('Status' in record['fields']) else 'NA')
             todos.append(todo)
         return todos
 
