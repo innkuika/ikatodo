@@ -38,6 +38,5 @@ class Todo(object):
                 "Ref URL": self.ref_url,
                 "Related Work ID": self.related_work_id,
                 "Type": self.type
-            },
-            "typecast": True
+            }
         }
