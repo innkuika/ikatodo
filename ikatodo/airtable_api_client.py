@@ -50,12 +50,11 @@ class AirtableApiClient(object):
         assignment_records = self.session.get(self.ASSIGNMENTS_URL).json()['records']
         for record in assignment_records:
             if record['fields']['Type'] == 'Assignment':
-                dates = Dates(datetime.datetime.strptime(record['fields']['Available Date'], '%Y-%m-%d'),
-                              datetime.datetime.strptime(
-                                  record['fields']['Doable Date'], '%Y-%m-%d'),
-                              datetime.datetime.strptime(
-                                  record['fields']['Due Date'], '%Y-%m-%d'),
-                              datetime.datetime.strptime(record['fields']['Office Hour Date'], '%Y-%m-%d'))
+                dates = Dates(due_date=datetime.datetime.strptime(
+                                  record['fields']['Due Date'], '%Y-%m-%d').date(),
+                              doable_date=datetime.datetime.strptime(
+                                  record['fields']['Doable Date'], '%Y-%m-%d').date()
+                              )
                 basic_info = BasicInfo(record['fields']['Assignment Name'][:7],
                                        record['fields']['Assignment Name'][8:], dates, record['id'],
                                        record['fields']['Ref URL'] if (
@@ -83,7 +82,7 @@ class AirtableApiClient(object):
         for record in todo_records:
             todo = Todo(record['fields']['Name'],
                         datetime.datetime.strptime(
-                                      record['fields']['Date'], '%Y-%m-%d'),
+                                      record['fields']['Date'], '%Y-%m-%d').date(),
                         record['fields']['Ref URL'] if (
                                       'Ref URL' in record['fields']) else '',
                         record['fields']['Related Work ID'],
@@ -103,6 +102,10 @@ class AirtableApiClient(object):
         record = todo.to_post_record()
         self._raise_on_bad_response(self.session.patch(f'{self.TODO_URL}/{todo_id}', json=record))
 
+    def delete_todo(self, todo: Todo):
+        todo_id = todo.id
+        self._raise_on_bad_response(self.session.delete(f'{self.TODO_URL}/{todo_id}'))
+
     def get_all_office_hours(self) -> List[OfficeHour]:
         office_hours = []
         office_hour_records = self.session.get(self.OH_URL).json()['records']
@@ -119,7 +122,6 @@ class AirtableApiClient(object):
         return office_hours
 
     def delete_all_todo(self):
-        todo_records = self.session.get(self.TODO_URL).json()['records']
-        for record in todo_records:
-            _id = record["id"]
-            self._raise_on_bad_response(self.session.delete(f"{self.TODO_URL}/{_id}", json=record))
+        for todo in self.get_all_todos():
+            self.delete_todo(todo)
+

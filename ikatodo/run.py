@@ -6,8 +6,10 @@ from .models import Assignment, Todo, OfficeHour
 from .api_wrapper import ApiWrapper
 
 
-def calc_assignment_workload_distribution(assignment: Assignment) -> Dict[datetime.date, int]:
-    days = (assignment.basic_info.dates.due_date - assignment.basic_info.dates.doable_date).days
+def calc_assignment_workload_distribution(assignment: Assignment, api_wrapper: ApiWrapper) -> Dict[datetime.date, int]:
+    begin_date = assignment.basic_info.dates.doable_date
+    end_date = api_wrapper.get_last_office_hour_date(assignment)
+    days = (end_date - begin_date).days
 
     # distributes workload evenly
     segments = assignment.segment_number
@@ -21,9 +23,9 @@ def calc_assignment_workload_distribution(assignment: Assignment) -> Dict[dateti
     return distribution
 
 
-def generate_assignment_todos(assignment: Assignment) -> List[Todo]:
+def generate_assignment_todos(assignment: Assignment, api_wrapper: ApiWrapper) -> List[Todo]:
     todos = []
-    work_period_and_load = calc_assignment_workload_distribution(assignment)
+    work_period_and_load = calc_assignment_workload_distribution(assignment, api_wrapper)
     for date, load in work_period_and_load.items():
         if load == 0:
             continue
@@ -62,7 +64,7 @@ def post_new_assignment_todos(api_wrapper: ApiWrapper):
     assignments = api_wrapper.get_unscheduled_assignments()
     for assignment in assignments:
         # generate and post todo for each assignment
-        todos = generate_assignment_todos(assignment)
+        todos = generate_assignment_todos(assignment, api_wrapper)
         for todo in todos:
             api_wrapper.api_client.create_todo(todo)
 
@@ -127,8 +129,8 @@ def reassign_overdue_assignment_todos(api_wrapper: ApiWrapper):
 def run():
     print("Started!")
     api_wrapper = ApiWrapper(AirtableApiClient())
+    api_wrapper.api_client.delete_all_todo()
     post_new_assignment_todos(api_wrapper)
     post_new_office_hour_reminders(api_wrapper)
     reassign_overdue_assignment_todos(api_wrapper)
-    api_wrapper.api_client.delete_all_todo()
     print("Finished, yayy!")

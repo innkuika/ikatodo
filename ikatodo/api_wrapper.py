@@ -54,3 +54,26 @@ class ApiWrapper(object):
                     return office_hour, tomorrow_date
             tomorrow_date += datetime.timedelta(days=1)
         raise Exception('Did not find possible date to schedule office hour within 180 days.')
+
+    def get_last_office_hour_date(self, assignment: Assignment) -> datetime.date:
+        due_date = assignment.basic_info.dates.due_date
+        course_id = assignment.basic_info.course_id
+
+        begin_date = assignment.basic_info.dates.doable_date
+        end_date = assignment.basic_info.dates.due_date
+        # total time to finish the assignment
+        days = (end_date - begin_date).days
+
+        office_hours = sorted(self.get_office_hour_by_course_id(course_id), key=lambda x: x.day, reverse=False)
+
+        for day_count in range(days):
+            for office_hour in office_hours:
+                if due_date.weekday() == office_hour.day:
+                    return due_date
+            due_date -= datetime.timedelta(days=1)
+        print(f'WARNING: Did not find office hour during assignment:'
+              f'{assignment.basic_info.course_id} {assignment.basic_info.name}')
+        return due_date
+
+
+
