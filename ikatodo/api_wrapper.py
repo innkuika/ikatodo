@@ -77,6 +77,3 @@ class ApiWrapper(object):
         print(f'WARNING: Did not find office hour during assignment:'
               f'{assignment.basic_info.course_id} {assignment.basic_info.name}')
         return due_date
-
-
-
