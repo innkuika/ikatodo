@@ -14,7 +14,7 @@ class ApiWrapper(object):
     def get_overdue_assignment_todos(self) -> List[Todo]:
         todos = self.api_client.get_all_todos()
         overdue_assignment_todos = []
-        date = datetime.datetime.now()
+        date = datetime.datetime.now().date()
         for todo in todos:
             if todo.type == "Assignment" and todo.date < date:
                 # update todos' date to today
@@ -59,7 +59,10 @@ class ApiWrapper(object):
         due_date = assignment.basic_info.dates.due_date
         course_id = assignment.basic_info.course_id
 
-        begin_date = assignment.basic_info.dates.doable_date
+        # use today as the begin date if doable date is earlier than today
+        begin_date = assignment.basic_info.dates.doable_date \
+            if assignment.basic_info.dates.doable_date > datetime.datetime.now().date() \
+            else datetime.datetime.now().date()
         end_date = assignment.basic_info.dates.due_date
         # total time to finish the assignment
         days = (end_date - begin_date).days

@@ -7,7 +7,10 @@ from .api_wrapper import ApiWrapper
 
 
 def calc_assignment_workload_distribution(assignment: Assignment, api_wrapper: ApiWrapper) -> Dict[datetime.date, int]:
-    begin_date = assignment.basic_info.dates.doable_date
+    # use today as the begin date if doable date is earlier than today
+    begin_date = assignment.basic_info.dates.doable_date \
+        if assignment.basic_info.dates.doable_date > datetime.datetime.now().date() \
+        else datetime.datetime.now().date()
     end_date = api_wrapper.get_last_office_hour_date(assignment)
     days = (end_date - begin_date).days
 
@@ -16,10 +19,9 @@ def calc_assignment_workload_distribution(assignment: Assignment, api_wrapper: A
     workloads = [segments // days + (1 if x < segments % days else 0) for x in range(days)]
 
     distribution = {}
-    date = assignment.basic_info.dates.doable_date
     for workload in workloads:
-        distribution[date] = workload
-        date += datetime.timedelta(days=1)
+        distribution[begin_date] = workload
+        begin_date += datetime.timedelta(days=1)
     return distribution
 
 
@@ -125,5 +127,4 @@ def run():
     post_new_assignment_todos(api_wrapper)
     post_new_office_hour_reminders(api_wrapper)
     reassign_overdue_assignment_todos(api_wrapper)
-
     print("Finished, yayy!")
