@@ -31,6 +31,7 @@ class AirtableApiClient(object):
         self.ASSIGNMENTS_URL = get_env_or_raise("ASSIGNMENTS_AIRTABLE_API")
         self.TODO_URL = get_env_or_raise("TODOS_AIRTABLE_API")
         self.OH_URL = get_env_or_raise("OFFICE_HOUR_AIRTABLE_API")
+        self.COURSE_ID_LENGTH = get_env_or_raise("COURSE_ID_LENGTH")
         self.session = Session()
         self.session.headers.update({
             'Authorization': f"Bearer {get_env_or_raise('AUTH_TOKEN')}",
@@ -48,6 +49,7 @@ class AirtableApiClient(object):
     def get_all_assignments(self) -> List[Assignment]:
         assignments = []
         assignment_records = self.session.get(self.ASSIGNMENTS_URL).json()['records']
+        course_id_length = self.COURSE_ID_LENGTH
         for record in assignment_records:
             if record['fields']['Type'] == 'Assignment':
                 dates = Dates(due_date=datetime.datetime.strptime(
@@ -55,10 +57,12 @@ class AirtableApiClient(object):
                               doable_date=datetime.datetime.strptime(
                                   record['fields']['Doable Date'], '%Y-%m-%d').date()
                               )
-                basic_info = BasicInfo(record['fields']['Assignment Name'][:7],
-                                       record['fields']['Assignment Name'][8:], dates, record['id'],
-                                       record['fields']['Ref URL'] if (
-                                           'Ref URL' in record['fields']) else ''
+                basic_info = BasicInfo(course_id=record['fields']['Assignment Name'][:course_id_length],
+                                       name=record['fields']['Assignment Name'][course_id_length+1:],
+                                       dates=dates,
+                                       id=record['id'],
+                                       ref_url=record['fields']['Ref URL']
+                                       if 'Ref URL' in record['fields'] else ''
                                        )
                 assignment = Assignment(
                     basic_info,

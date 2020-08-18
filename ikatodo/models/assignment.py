@@ -17,6 +17,7 @@ class BasicInfo(object):
     id: str
     ref_url: str
 
+
 @dataclass
 class Assignment(object):
     basic_info: BasicInfo
