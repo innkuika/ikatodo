@@ -88,7 +88,8 @@ class AirtableApiClient(object):
                         record['fields']['Related Work ID'],
                         record['fields']['Description'] if 'Description' in record['fields'] else '',
                         record['fields']['Type'],
-                        record['id'])
+                        record['id'],
+                        record['fields']['Status'] if ('Status' in record['fields']) else 'NA')
             todos.append(todo)
         return todos
 
@@ -123,3 +124,4 @@ class AirtableApiClient(object):
     def delete_all_todo(self):
         for todo in self.get_all_todos():
             self.delete_todo(todo)
+
